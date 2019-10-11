@@ -11,14 +11,6 @@ var sheetNameOutput = 'Output';
 var colOutputKpn = 0;
 var colOutputQty = 1;
 
-function onOpen() {
-  SpreadsheetApp.getUi()
-  .createMenu('Kitsbow')
-  .addItem('Create Shopping List', 'createShoppingList')
-  .addToUi();
-};
-
-
 function createShoppingList() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   
@@ -35,9 +27,6 @@ function createShoppingList() {
     }
   }
   
-  // write ingested shopping list to log
-  Logger.log(JSON.stringify(input));
-  
   var sheetBomData = ss.getSheetByName(sheetNameBomData);
   var bomData = sheetBomData.getDataRange().getValues();
   
@@ -51,9 +40,6 @@ function createShoppingList() {
       output[bomData[i][colBomKpn]] += input[bomData[i][colBomSku]]* bomData[i][colBomUsage];   
     }
   }
-  
-  // write shopping list output to log
-  Logger.log(JSON.stringify(output));
   
   var sheetOutput = ss.getSheetByName(sheetNameOutput);
   // clear the output range

@@ -1,5 +1,5 @@
 var spreadsheetIdShoppingMaster = '1CMJJKaB8QJISD0uLiQo2qqnV8OlbntyGJeIYI1xNK0k';
-var driveIdShoppingFolder = '1HPRLXVt13V_0HMd1Knc4AK415yIsCATa';
+var driveIdShoppingFolder = '1LTbaJD6bnZSpO3pGJ_Y3aLhORzoI97Yg';
 
 function openGoogleDriveFolder() {
     openUrl('https://drive.google.com/drive/folders/'+driveIdShoppingFolder,
@@ -22,4 +22,34 @@ function openUrl(url, title) {
         </html>')
     .setWidth( 150 ).setHeight( 10 );
     SpreadsheetApp.getUi().showModalDialog( html, title );
+}
+
+function overwriteWithValues(sourceSpreadsheet, destinationSpreadsheet, sheetName) {
+    var sourceSheet = sourceSpreadsheet.getSheetByName(sheetName);
+    var destinationSheet = destinationSpreadsheet.getSheetByName(sheetName);
+    var sourceValues = sourceSheet.getRange(1,1,sourceSheet.getMaxRows(),sourceSheet.getMaxColumns()).getValues();
+    destinationSheet.getRange(1, 1, destinationSheet.getMaxRows(), destinationSheet.getMaxColumns()).setValues(sourceValues);
+  }
+
+function validateSku(skuText) {
+    // check if the sku is 12 characters long
+    if(skuText.length != 12) {
+        return false;
+    }
+
+    // check if hyphen separators are in the right place
+    if(skuText[4]!='-' || skuText[8]!='-') {
+        return false;
+    }
+
+    // check if the sku contains 10 digit characters
+    if(skuText.match( /\d+/g ).join('').length != 10) {
+        return false;
+    }
+    
+    return true;
+}
+
+function styleFromSku(skuText) {
+    return skuText.substring(0,4);
 }

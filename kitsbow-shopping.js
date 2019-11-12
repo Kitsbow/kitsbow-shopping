@@ -9,7 +9,7 @@ var sheetNameShoppingList = 'SKUs Order';
 var colShoppingListSku = 0;
 var colShoppingListQty = 1;
 
-var sheetNameOutput = 'Output';
+var sheetNameOutput = 'Master - Shopping List';
 var colOutputKpn = 0;
 var colOutputQty = 1;
 

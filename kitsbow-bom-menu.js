@@ -5,6 +5,7 @@ function onOpen() {
     SpreadsheetApp.getUi()
     .createMenu('Kitsbow')
     .addItem('Clone Shopping List', 'cloneShoppingList')
+    .addSeparator()
     .addItem('Open Google Drive', 'openGoogleDriveFolder')
     .addToUi();
   

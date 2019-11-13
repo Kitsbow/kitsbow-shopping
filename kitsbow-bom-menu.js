@@ -5,6 +5,7 @@ function onOpen() {
     SpreadsheetApp.getUi()
     .createMenu('Kitsbow')
     .addItem('Clone Shopping List', 'cloneShoppingList')
+    .addItem('Clone CMT List', 'cloneCmtList')
     .addSeparator()
     .addItem('Open Google Drive', 'openGoogleDriveFolder')
     .addToUi();
@@ -13,7 +14,7 @@ function onOpen() {
   else {
     SpreadsheetApp.getUi()
     .createMenu('Kitsbow')
-    .addItem('Update Shopping List', 'updateShoppingList')
+    .addItem('Update from SKUs Order', 'determineTypeUpdateListTable')
     .addSeparator()
     .addItem('Open Google Drive', 'openGoogleDriveFolder')
     .addSeparator()

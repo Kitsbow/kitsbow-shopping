@@ -22,14 +22,18 @@ var cmtConfig = {
   template: sheetNameMasterPrefix + sheetNameCmt, 
   sheetName: sheetNameCmt,
   type: typeCmt, 
-  sheetsToDelete: ['Documentation', sheetNameMasterPrefix + sheetNameShopping] 
+  sheetsToDelete: ['Documentation', sheetNameMasterPrefix + sheetNameShopping],
+  colPartType: 4,
+  colVendorName: 5
 };
 
 var shopConfig = { 
   template: sheetNameMasterPrefix + sheetNameShopping, 
   sheetName: sheetNameShopping,
   type: typeShopping, 
-  sheetsToDelete: ['Documentation', sheetNameMasterPrefix + sheetNameCmt] 
+  sheetsToDelete: ['Documentation', sheetNameMasterPrefix + sheetNameCmt],
+  colPartType: 6,
+  colVendorName: 7
 };
 
 var sheetNameMaterials = '+Materials Reference';
@@ -94,10 +98,14 @@ function updateListTable(spreadsheet, config) {
   
   // render the object to an array
   Object.keys(output).forEach(function(key) { outputValues.push([ key, output[key] ]);});
+
+  Logger.log(JSON.stringify([config.colPartType,config.colVendorName ]));
   
-  // write the values to the output sheet
+  // write sorted values to the output sheet in order of part type then vendor name
   outputValues.sort();
   sheetOutput.getRange(2, 1, outputValues.length, outputValues[0].length).setValues(outputValues);
+  sheetOutput.getRange(2, 1, outputValues.length, sheetOutput.getLastColumn())
+    .sort([{column: config.colPartType, ascending: true}, {column: config.colVendorName, ascending: true}]);
 }
 
 function cloneCmtList() {

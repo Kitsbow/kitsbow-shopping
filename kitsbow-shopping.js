@@ -99,8 +99,6 @@ function updateListTable(spreadsheet, config) {
   // render the object to an array
   Object.keys(output).forEach(function(key) { outputValues.push([ key, output[key] ]);});
 
-  Logger.log(JSON.stringify([config.colPartType,config.colVendorName ]));
-  
   // write sorted values to the output sheet in order of part type then vendor name
   outputValues.sort();
   sheetOutput.getRange(2, 1, outputValues.length, outputValues[0].length).setValues(outputValues);

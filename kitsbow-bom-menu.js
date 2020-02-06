@@ -20,7 +20,7 @@ function onOpen() {
     .addSeparator()
     .addItem('Restore Materials Reference', 'fetchMaterialsReference')
     .addItem('Restore SKU Master', 'fetchSkuMaster')
-    .addItem('Restore BOM Master', 'fetchBomMaster')
+    //.addItem('Restore BOM Master', 'fetchBomMaster')
     .addToUi();
   }
 };

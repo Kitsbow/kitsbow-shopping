@@ -1,9 +1,6 @@
-var sheetNameBomData = '+BOM Data';
-var masterIdBom = '1xFYUc59__4-WzmqWKVzdiHBmZawH-VNMyHFWyRPbVJw';
-var masterSheetBom = 'BOM Rows';
-var colBomSku = 0;
-var colBomKpn = 1;
-var colBomUsage = 4;
+// var sheetNameBomData = '+BOM Data';
+// var masterIdBom = '1xFYUc59__4-WzmqWKVzdiHBmZawH-VNMyHFWyRPbVJw';
+// var masterSheetBom = 'BOM Rows';
 
 var sheetNameShoppingList = 'SKUs Order';
 var colShoppingListSku = 0;
@@ -69,25 +66,29 @@ function updateListTable(spreadsheet, config) {
   
   var input = { };
   var output = { };
+  var listSkuArr = [];
 
   // step through all lines in the shopping list to create the shoppingList object
   for(var i = 1; i < listData.length; i++ ) {
     if(listData[i][colShoppingListSku].length) {
       input[listData[i][colShoppingListSku]] = listData[i][colShoppingListQty];
+      listSkuArr.push(listData[i][colShoppingListSku]);
+
     }
   }
   
-  var sheetBomData = spreadsheet.getSheetByName(sheetNameBomData);
-  var bomData = sheetBomData.getDataRange().getValues();
+  var bomData = getBomDataForSkus(listSkuArr);
+  const KEY_FOUND_POSTFIX = '_found';
   
   // step through all lines in the bom database
   for(var i = 1; i < bomData.length; i++ ) {
-    if(bomData[i][colBomSku].length && input.hasOwnProperty(bomData[i][colBomSku])) {
-      if(!output.hasOwnProperty(bomData[i][colBomKpn])){
-        output[bomData[i][colBomKpn]] = 0;
+    if(bomData[i]['SKU'].length && input.hasOwnProperty(bomData[i]['SKU'])) {
+      if(!output.hasOwnProperty(bomData[i]['KPN'])){
+        output[bomData[i]['KPN']] = 0;
       }
       
-      output[bomData[i][colBomKpn]] += input[bomData[i][colBomSku]]* bomData[i][colBomUsage];   
+      output[bomData[i]['KPN']] += input[bomData[i]['SKU']]* bomData[i]['Usage'];   
+      input[bomData[i]['SKU'] + KEY_FOUND_POSTFIX] = 1;
     }
   }
   
@@ -99,11 +100,20 @@ function updateListTable(spreadsheet, config) {
   // render the object to an array
   Object.keys(output).forEach(function(key) { outputValues.push([ key, output[key] ]);});
 
+  if (0 == outputValues.length) {
+    outputValues.push(["No Skus were matched in BOM"]);
+  }
   // write sorted values to the output sheet in order of part type then vendor name
   outputValues.sort();
   sheetOutput.getRange(2, 1, outputValues.length, outputValues[0].length).setValues(outputValues);
   sheetOutput.getRange(2, 1, outputValues.length, sheetOutput.getLastColumn())
     .sort([{column: config.colPartType, ascending: true}, {column: config.colVendorName, ascending: true}]);
+
+    listSkuArr.forEach(function(skuKey) {
+      if ( input[skuKey] && ! input[skuKey + KEY_FOUND_POSTFIX] ) {
+        Logger.log("BOM is missing SKU: " + skuKey + "\n");
+      }
+    });
 }
 
 function cloneCmtList() {
@@ -123,7 +133,7 @@ function aggregateOrderList(config) {
     DriveApp.getFileById(sourceSpreadsheet.getId()).makeCopy(createFilename(config.type), outputFolder))  
 
   // overwrite IMPORTRANGE()-driven sheets with values
-  overwriteWithValues(sourceSpreadsheet, destinationSpreadsheet, sheetNameBomData);
+  // (sm del) overwriteWithValues(sourceSpreadsheet, destinationSpreadsheet, sheetNameBomData);
   overwriteWithValues(sourceSpreadsheet, destinationSpreadsheet, sheetNameMaterials);
   overwriteWithValues(sourceSpreadsheet, destinationSpreadsheet, sheetNameSkuMaster);
 
@@ -170,9 +180,8 @@ function getStylesFromShoppingList() {
 function createFilename(outputType) {
   var skus = getStylesFromShoppingList();
   var today = new Date();
-
   return 'Style'+ (skus.length==1? ' ':'s ')+skus.join('_')+' '+
-    (outputType == typeShopping? 'Shopping':'CMT Kitting')+' List '+
+    (outputType == typeShopping? 'Shopping v2':'CMT Kitting v2')+' List '+
     today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
 }
 
@@ -184,9 +193,6 @@ function fetchSkuMaster() {
   updateSheetFromReference(masterIdSku, masterSheetSku, sheetNameSkuMaster);
 }
 
-function fetchBomMaster() {
-  updateSheetFromReference(masterIdBom, masterSheetBom, sheetNameBomData);
-}
 
 function updateSheetFromReference(referenceId, referenceSheetName, localSheetName) {
   var ui = SpreadsheetApp.getUi();
@@ -214,4 +220,3 @@ function updateSheetFromReference(referenceId, referenceSheetName, localSheetNam
   // overwrite the local sheet
   localSheet.getRange(1, 1, data.length, data[0].length).setValues(data);
 }
-

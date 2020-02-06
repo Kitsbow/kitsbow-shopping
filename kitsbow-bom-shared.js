@@ -1,6 +1,10 @@
 var spreadsheetIdShoppingMaster = '1CMJJKaB8QJISD0uLiQo2qqnV8OlbntyGJeIYI1xNK0k';
 var driveIdShoppingFolder = '1LTbaJD6bnZSpO3pGJ_Y3aLhORzoI97Yg';
 
+var bomDataSetId = "production_data";
+var bomTableName = "bom";
+var bomProjectId = "kitsbow-bom-database";
+
 function openGoogleDriveFolder() {
     openUrl('https://drive.google.com/drive/folders/'+driveIdShoppingFolder,
         'Opening Google Drive');
@@ -52,4 +56,93 @@ function validateSku(skuText) {
 
 function styleFromSku(skuText) {
     return skuText.substring(0,4);
+}
+
+/**
+ * Return data from the BOM table as an object array [{colname: value, ...},
+ * Current columns are:
+ * SKU	STRING	REQUIRED	
+ * KPN	STRING	REQUIRED	
+ * Notes	STRING	NULLABLE	
+ * Placement	STRING	NULLABLE	
+ * Usage	FLOAT	NULLABLE	
+ * Section	STRING	NULLABLE	
+ * Uploaded	DATE	REQUIRED	
+ * LastUpdate	TIMESTAMP	NULLABLE	
+ * 
+ * In this version, the returned values are all of type String.
+ * @param {Array} skus String sku list as "NNNN-NNN-NNN"
+ */
+function getBomDataForSkus(skus) {
+    var querySql = "SELECT * FROM `" + bomDataSetId + "." + bomTableName + "` WHERE sku IN (";
+    for (var i = 0; i < skus.length; i++) {
+      querySql += " '" + skus[i] + "'";
+      if (i < skus.length-1) {
+        querySql += ",";
+      }
+    }
+    querySql += ")";
+  
+    var resultsJson = sendSQLQuery(querySql, {type: "BigQuery", projectId: bomProjectId}, "json");
+    return resultsJson;
+  }
+  
+/**
+ * send SQL query to a database described in 'connection' and return results array
+ * @param {String} query SQL Query string 
+ * @param {Object} connection contains connection info, including "type" which currently must be "BigQuery"
+ * @param {String} returnType "json" for an array of objects
+ */
+function sendSQLQuery(query, connection, returnType) {
+    if (connection.type == "BigQuery") {
+        var queryRequest = {
+            kind: "json",
+            query: query,
+            useLegacySql: false
+        }
+        var queryResults = BigQuery.Jobs.query(queryRequest, connection.projectId);
+        var jobId = queryResults.jobReference.jobId;
+      
+        // repeat check for completed job
+        var sleepTimeMs = 500;
+        while (!queryResults.jobComplete) {
+            Utilities.sleep(sleepTimeMs);
+            sleepTimeMs *= 2;
+            queryResults = BigQuery.Jobs.getQueryResults(projectId, jobId);
+            //Logger.log("query loop " + queryResults.jobComplete);
+        }
+      
+        // Get all the rows of results.
+        var rows = queryResults.rows;
+        while (queryResults.pageToken) {
+                queryResults = BigQuery.Jobs.getQueryResults(projectId, jobId, {
+                pageToken: queryResults.pageToken
+            });
+            rows = rows.concat(queryResults.rows);
+        }
+          //response.rows is an array of objects, with each representing a query result row:
+          // f:[ {v: value}, ...]
+          // values come from JSON as strings, so have to be coerced to JS types
+          // types can be gotten from the 'schema' property of the queryResults
+        if (rows && 0 < rows.length) {
+            if (returnType == "json") {
+                var result = [];
+                var fields = queryResults.schema.fields;
+                rows.forEach( function(row, i) {
+                    var retRowObj = {};
+                    row.f.forEach( function (col, j) {
+                        retRowObj[fields[j].name] = col.v;
+                    });
+                    result.push(retRowObj);
+                });
+                return result;
+            } else {
+                throw new Error("unrecognized return type: " + returnType);
+            }
+        } else {
+            return [];
+        }
+    } else {
+        throw new Error("unrecognized connection type: " + connection.type);
+    }
 }

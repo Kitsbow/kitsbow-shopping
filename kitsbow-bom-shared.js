@@ -1,6 +1,6 @@
 var spreadsheetIdShoppingMaster = '1CMJJKaB8QJISD0uLiQo2qqnV8OlbntyGJeIYI1xNK0k';
 var driveIdShoppingFolder = '1LTbaJD6bnZSpO3pGJ_Y3aLhORzoI97Yg';
-
+//BigQuery connection info
 var bomDataSetId = "production_data";
 var bomTableName = "bom";
 var bomProjectId = "kitsbow-bom-database";

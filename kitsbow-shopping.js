@@ -1,7 +1,3 @@
-// var sheetNameBomData = '+BOM Data';
-// var masterIdBom = '1xFYUc59__4-WzmqWKVzdiHBmZawH-VNMyHFWyRPbVJw';
-// var masterSheetBom = 'BOM Rows';
-
 var sheetNameShoppingList = 'SKUs Order';
 var colShoppingListSku = 0;
 var colShoppingListQty = 1;
@@ -133,7 +129,6 @@ function aggregateOrderList(config) {
     DriveApp.getFileById(sourceSpreadsheet.getId()).makeCopy(createFilename(config.type), outputFolder))  
 
   // overwrite IMPORTRANGE()-driven sheets with values
-  // (sm del) overwriteWithValues(sourceSpreadsheet, destinationSpreadsheet, sheetNameBomData);
   overwriteWithValues(sourceSpreadsheet, destinationSpreadsheet, sheetNameMaterials);
   overwriteWithValues(sourceSpreadsheet, destinationSpreadsheet, sheetNameSkuMaster);
 

@@ -81,7 +81,7 @@ function getBomDataForSkus(skus) {
         querySql += ",";
       }
     }
-    querySql += ")";
+    querySql += ") ORDER BY SKU, KPN";
   
     var resultsJson = sendSQLQuery(querySql, {type: "BigQuery", projectId: bomProjectId}, "json");
     return resultsJson;

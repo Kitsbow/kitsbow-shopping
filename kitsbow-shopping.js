@@ -63,10 +63,15 @@ function updateListTable(spreadsheet, config) {
   var input = { };
   var output = { };
   var listSkuArr = [];
+  var qaReport = "";
 
   // step through all lines in the shopping list to create the shoppingList object
   for(var i = 1; i < listData.length; i++ ) {
     if(listData[i][colShoppingListSku].length) {
+      if (input[listData[i][colShoppingListSku]]) {
+        qaReport += '\nWarning: The SKU ' + listData[i][colShoppingListSku] + 
+        ' appears more than once in this order. Parts will only be tallied for the last count.';
+      }
       input[listData[i][colShoppingListSku]] = listData[i][colShoppingListQty];
       listSkuArr.push(listData[i][colShoppingListSku]);
 
@@ -75,19 +80,27 @@ function updateListTable(spreadsheet, config) {
   
   var bomData = getBomDataForSkus(listSkuArr);
   const KEY_FOUND_POSTFIX = '_found';
-  
+  var bomRecordsFound = 0;
   // step through all lines in the bom database
-  for(var i = 1; i < bomData.length; i++ ) {
-    if(bomData[i]['SKU'].length && input.hasOwnProperty(bomData[i]['SKU'])) {
-      if(!output.hasOwnProperty(bomData[i]['KPN'])){
-        output[bomData[i]['KPN']] = 0;
+  for(var i = 0; i < bomData.length; i++ ) {
+    var nSKU = bomData[i]['SKU'];
+    var nKPN = bomData[i]['KPN'];
+    var nUsage = bomData[i]['Usage'];
+    if(nSKU && 0 < input[nSKU]) {
+      if( undefined === output[nKPN] || null === output[nKPN]){
+        output[nKPN] = 0;
       }
-      
-      output[bomData[i]['KPN']] += input[bomData[i]['SKU']]* bomData[i]['Usage'];   
-      input[bomData[i]['SKU'] + KEY_FOUND_POSTFIX] = 1;
+      output[nKPN] += input[nSKU]* nUsage;   
+      input[nSKU + KEY_FOUND_POSTFIX] = 1;
+      bomRecordsFound++;
+    } else {
+      qaReport += '\nNote: missing/invalid count for SKU ' + nSKU;
     }
   }
-  
+  if (bomData.length > bomRecordsFound) {
+    qaReport += '\nWarning: mismatched count in totals for these SKUs';
+  }
+
   var sheetOutput = spreadsheet.getSheetByName(config.sheetName);
   // clear the output range
   sheetOutput.getRange(2, colOutputKpn + 1, sheetOutput.getMaxRows() - 1, colOutputQty + 1).clearContent();
@@ -107,9 +120,14 @@ function updateListTable(spreadsheet, config) {
 
     listSkuArr.forEach(function(skuKey) {
       if ( input[skuKey] && ! input[skuKey + KEY_FOUND_POSTFIX] ) {
-        Logger.log("BOM is missing SKU: " + skuKey + "\n");
+        qaReport += '\nWarning: BOM table is missing SKU: ' + skuKey;
       }
     });
+
+    if (qaReport) {
+      var ui = SpreadsheetApp.getUi();
+      ui.alert( "QA Check for " + spreadsheet.getName() + "\n" + qaReport);
+    }
 }
 
 function cloneCmtList() {

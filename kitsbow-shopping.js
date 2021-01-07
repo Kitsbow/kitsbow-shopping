@@ -83,9 +83,9 @@ function updateListTable(spreadsheet, config) {
   var bomRecordsFound = 0;
   // step through all lines in the bom database
   for(var i = 0; i < bomData.length; i++ ) {
-    var nSKU = bomData[i]['SKU'];
-    var nKPN = bomData[i]['KPN'];
-    var nUsage = bomData[i]['Usage'];
+    var nSKU = bomData[i]['sku'];
+    var nKPN = bomData[i]['kpn'];
+    var nUsage = bomData[i]['part_usage'];
     if(nSKU && 0 < input[nSKU]) {
       if( undefined === output[nKPN] || null === output[nKPN]){
         output[nKPN] = 0;
